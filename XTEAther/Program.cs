@@ -80,14 +80,8 @@ namespace XTEAther
             Console.WriteLine("Restoring PE header...");
             RestoreHeader(raw);
 
-            Console.WriteLine("Padding expected file size...");
-            PadToExpectedFileSize(ref raw);
-
             Console.WriteLine("Restoring original size of image...");
             RestoreOriginalSizeOfImage(raw, backup);
-
-            Console.WriteLine("Restoring original timestamp...");
-            RestoreOriginalTimestamp(raw, backup);
 
             File.WriteAllBytes(output, raw);
             Console.WriteLine();
@@ -244,19 +238,7 @@ namespace XTEAther
 
         #endregion
 
-        #region Phase 5 – Pad output file
-
-        private static void PadToExpectedFileSize(ref byte[] raw)
-        {
-            if ((uint)raw.Length < ExpectedFileSize)
-            {
-                Array.Resize(ref raw, (int)ExpectedFileSize);
-            }
-        }
-
-        #endregion
-
-        #region Phase 6 – Restore original SizeOfImage
+        #region Phase 5 – Restore original SizeOfImage
 
         private static void RestoreOriginalSizeOfImage(byte[] processed, string backupPath)
         {
@@ -347,40 +329,6 @@ namespace XTEAther
 
         #endregion
 
-        #region Phase 7 – Restore original timestamp
-
-        private static void RestoreOriginalTimestamp(byte[] processed, string backupPath)
-        {
-            byte[] original = File.ReadAllBytes(backupPath);
-
-            static int TimestampOffset(byte[] executable, string description)
-            {
-                if (executable.Length < 0x40 || executable[0] != 'M' || executable[1] != 'Z')
-                {
-                    throw new InvalidDataException($"{description} is not a valid PE executable.");
-                }
-
-                int peOffset = ToInt32(executable, 0x3C);
-                if (peOffset < 0 || (long)peOffset + 12 > executable.Length)
-                {
-                    throw new InvalidDataException($"{description} has an out-of-bounds PE header.");
-                }
-
-                if (executable[peOffset] != 'P' || executable[peOffset + 1] != 'E'
-                    || executable[peOffset + 2] != 0 || executable[peOffset + 3] != 0)
-                {
-                    throw new InvalidDataException($"{description} has an invalid PE signature.");
-                }
-
-                return peOffset + 8;
-            }
-
-            int originalTimestampOffset = TimestampOffset(original, "Backup executable");
-            int processedTimestampOffset = TimestampOffset(processed, "Processed executable");
-            Array.Copy(original, originalTimestampOffset, processed, processedTimestampOffset, 4);
-        }
-
-        #endregion
 
         #region Section table helpers
 
