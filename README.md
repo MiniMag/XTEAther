@@ -1,3 +1,7 @@
+This fork of XTEAther is only intended as a workaround for launching the recent Dead Space VR mod (https://github.com/chortdev/DeadSpace2VR).
+For anything else, use the main by Wemino.
+
+
 # XTEAther
 
 A preservation tool for the Steam release of Dead Space 2.
